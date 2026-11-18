@@ -2506,7 +2506,38 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+/// iAutomatizei: configuração embutida no build.
+///
+/// O workflow monta a variável de compilação `IAUT_CUSTOM_CONFIG` (JSON em base64, no mesmo
+/// formato do custom client oficial: `app-name`, `override-settings`, `default-settings` e
+/// opções "hard") a partir dos secrets do repositório. Quando ela existe, vale sempre e qualquer
+/// `custom.txt` externo é ignorado, para que ninguém troque o servidor colocando um arquivo ao lado do exe.
+fn apply_embedded_custom_client() -> bool {
+    let Some(cfg) = option_env!("IAUT_CUSTOM_CONFIG") else {
+        return false;
+    };
+    let cfg = cfg.trim();
+    if cfg.is_empty() {
+        return false;
+    }
+    let Ok(data) = decode64(cfg) else {
+        log::error!("Failed to decode embedded custom client config");
+        return false;
+    };
+    let Ok(data) =
+        serde_json::from_slice::<std::collections::HashMap<String, serde_json::Value>>(&data)
+    else {
+        log::error!("Failed to parse embedded custom client config");
+        return false;
+    };
+    apply_custom_client_data(data);
+    true
+}
+
 pub fn load_custom_client() {
+    if apply_embedded_custom_client() {
+        return;
+    }
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
@@ -2605,6 +2636,9 @@ pub fn get_dst_align_rgba() -> usize {
 }
 
 pub fn read_custom_client(config: &str) {
+    if apply_embedded_custom_client() {
+        return;
+    }
     let Ok(data) = decode64(config) else {
         log::error!("Failed to decode custom client config");
         return;
@@ -2618,13 +2652,16 @@ pub fn read_custom_client(config: &str) {
         log::error!("Failed to dec custom client config");
         return;
     };
-    let Ok(mut data) =
+    let Ok(data) =
         serde_json::from_slice::<std::collections::HashMap<String, serde_json::Value>>(&data)
     else {
         log::error!("Failed to parse custom client config");
         return;
     };
+    apply_custom_client_data(data);
+}
 
+fn apply_custom_client_data(mut data: std::collections::HashMap<String, serde_json::Value>) {
     if let Some(app_name) = data.remove("app-name") {
         if let Some(app_name) = app_name.as_str() {
             *config::APP_NAME.write().unwrap() = app_name.to_owned();

@@ -107,4 +107,6 @@ fn main() {
         build_android_ifaddrs();
     }
     println!("cargo:rerun-if-changed=build.rs");
+    // iAutomatizei: configuração embutida (ver apply_embedded_custom_client em src/common.rs)
+    println!("cargo:rerun-if-env-changed=IAUT_CUSTOM_CONFIG");
 }
