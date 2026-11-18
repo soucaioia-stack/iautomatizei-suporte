@@ -221,10 +221,14 @@ jobs:
       - name: Build self-extracted executable
         shell: bash
         run: |
+          # O instalador copia a pasta como está e depois procura "<app-name>.exe"
+          # (get_install_info em src/platform/windows.rs); o gerador do custom client
+          # oficial também renomeia o executável antes de empacotar.
+          mv ./rustdesk/rustdesk.exe "./rustdesk/${APP_NAME}.exe"
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/${APP_NAME}.exe"
           popd
           mkdir -p ./output
           mv ./target/release/rustdesk-portable-packer.exe "./output/${APP_NAME}-${VERSION}-x64.exe"
