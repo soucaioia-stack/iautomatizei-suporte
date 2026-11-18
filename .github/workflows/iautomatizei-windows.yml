@@ -65,6 +65,9 @@ jobs:
           }
           $cfg = [ordered]@{
             'app-name' = $env:APP_NAME
+            # "hard setting": versão só para receber conexão (sem conectar a outros PCs,
+            # sem histórico/favoritos); janela pequena com logo, ID, senha e status.
+            'conn-type' = 'incoming'
             'override-settings' = [ordered]@{
               'custom-rendezvous-server' = $env:IAUT_SERVER.Trim()
               'relay-server'             = $env:IAUT_SERVER.Trim()
@@ -75,6 +78,7 @@ jobs:
               'hide-server-settings'     = 'Y'
               'hide-proxy-settings'      = 'Y'
               'hide-websocket-settings'  = 'Y'
+              'hide-powered-by-me'       = 'Y'
             }
             'default-settings' = [ordered]@{}
           }
