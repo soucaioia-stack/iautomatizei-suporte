@@ -232,3 +232,5 @@ jobs:
           name: iautomatizei-suporte-windows-x64
           path: ./output
           if-no-files-found: error
+          # Repo público: qualquer usuário logado baixa artefatos. Baixar logo e não deixar exposto.
+          retention-days: 1
